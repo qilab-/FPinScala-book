@@ -15,7 +15,7 @@ object Exe29 {
     fold(t)(_ => 1)(_ + _ + 1)
   }
 
-  def maximun(t: Tree[Int]): Int = {
+  def maximum(t: Tree[Int]): Int = {
     fold(t)(a => a)(_ max _)
   }
 
