@@ -49,4 +49,31 @@ object Option {
     }
   }
 
+  // Exercise 4.3
+  def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = {
+    a.flatMap { x =>
+      b.map { y =>
+        f(x, y)
+      }
+    }
+  }
+
+  // Exercise 4.4
+  def sequence[A](a: List[Option[A]]): Option[List[A]] = {
+    a.foldRight[Option[List[A]]](Some(Nil)) { (o, ol) =>
+      ol.flatMap { l =>
+        o.map(_ :: l)
+      }
+    }
+  }
+
+  // Exercise 4.5
+  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = {
+    a.foldRight[Option[List[B]]](Some(Nil)) { (x, ol) =>
+      ol.flatMap { l =>
+        f(x).map(_ :: l)
+      }
+    }
+  }
+
 }
