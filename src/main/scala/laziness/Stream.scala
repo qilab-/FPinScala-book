@@ -62,6 +62,9 @@ trait Stream[+A] {
 
   // Exercise 5.6
   def headOption2(): Option[A] =
+    foldRight(Option.empty[A])((a, _) => Some(a))
+
+  def lastOption(): Option[A] =
     foldRight(Option.empty[A])((a, o) => o.orElse(Some(a)))
 
   // Exercise 5.7
@@ -73,7 +76,7 @@ trait Stream[+A] {
     foldRight(Stream.empty[A])((h, t) => if (p(h)) Stream.cons(h, t) else t)
 
   // Exercise 5.7
-  def append[B >: A](s: Stream[B]): Stream[B] =
+  def append[B >: A](s: => Stream[B]): Stream[B] =
     foldRight(s)((h, t) => Stream.cons(h, t))
 
   // Exercise 5.7
