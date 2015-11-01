@@ -121,4 +121,42 @@ object RNG {
   def ints2(count: Int)(rng: RNG): (List[Int], RNG) =
     sequence { List.fill[Rand[Int]](count)(int) }(rng)
 
+  def nonNegativeLessThan(n: Int): Rand[Int] = { rng =>
+    val (i, rng2) = nonNegativeInt(rng)
+    val mod = i % n
+    // check is always positive mathematically but if the RHS > Int.MaxValue then check becomes negative because of overflow
+    val check = i + (n - 1) - mod
+    if (check >= 0)
+      (mod, rng2)
+    else
+      nonNegativeLessThan(n)(rng2)
+  }
+
+  // Exercise 6.8
+  def flatMap[A, B](f: Rand[A])(g: A => Rand[B]): Rand[B] = {
+    rng => {
+      val (a, rng2) = f(rng)
+      g(a)(rng2)
+    }
+  }
+
+  // Exercise 6.8
+  def nonNegativeLessThan2(n: Int): Rand[Int] =
+    flatMap(nonNegativeInt) { i =>
+      val mod = i % n
+      if (i + (n - 1) - mod >= 0)
+//        rng => (mod, rng)
+        unit(mod)
+      else
+        nonNegativeLessThan2(n)
+    }
+
+  // Exercise 6.9
+  def map_2[A, B](s: Rand[A])(f: A => B): Rand[B] =
+    flatMap(s)(a => unit(f(a)))
+
+  // Exercise 6.9
+  def map2_2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    flatMap(both(ra, rb)) { case (a, b) => unit(f(a, b)) }
+
 }
