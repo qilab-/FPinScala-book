@@ -160,3 +160,54 @@ object RNG {
     flatMap(both(ra, rb)) { case (a, b) => unit(f(a, b)) }
 
 }
+
+case class State[S, +A](run: S => (A, S)) {
+
+  // Exercise 6.10
+  def unit: State[S, A] = this
+
+  // Exercise 6.10
+  def map[B](f: A => B): State[S, B] = {
+    val run2: S => (B, S) = s => {
+      val (a, s2) = run(s)
+      (f(a), s2)
+    }
+    State(run2)
+  }
+
+  // Exercise 6.10
+  def map2[B, C](other: State[S, B])(f: (A, B) => C): State[S, C] = {
+    val run2: S => (C, S) = s => {
+      val (a, s2) = run(s)
+      val (b, s3) = other.run(s2)
+      (f(a, b), s3)
+    }
+    State(run2)
+  }
+
+  // Exercise 6.10
+  def flatMap[B](f: A => State[S, B]): State[S, B] = {
+    val run2: S => (B, S) = s => {
+      val (a, s2) = run(s)
+      f(a).run(s2)
+    }
+    State(run2)
+  }
+
+
+}
+
+object State {
+  type Rand[A] = State[RNG, A]
+
+  // Exercise 6.10
+  def sequence[S, A](list: List[State[S, A]]): State[S, List[A]] = {
+    val run2: S => (List[A], S) =
+      s => list.foldRight((List.empty[A], s)) { case (state, (l, ss)) =>
+        val (a, s2) = state.run(ss)
+        (a :: l, s2)
+      }
+    State(run2)
+  }
+
+}
