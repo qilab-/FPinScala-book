@@ -191,7 +191,6 @@ case class State[S, +A](run: S => (A, S)) {
     State(run2)
   }
 
-
 }
 
 object State {
@@ -209,5 +208,9 @@ object State {
       }
     State(run2)
   }
+
+  def get[S]: State[S, S] = State(s => (s, s))
+
+  def set[S](s: S): State[S, Unit] = State(_ => ((), s))
 
 }
