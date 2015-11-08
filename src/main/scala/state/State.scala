@@ -164,9 +164,6 @@ object RNG {
 case class State[S, +A](run: S => (A, S)) {
 
   // Exercise 6.10
-  def unit: State[S, A] = this
-
-  // Exercise 6.10
   def map[B](f: A => B): State[S, B] = {
     val run2: S => (B, S) = s => {
       val (a, s2) = run(s)
@@ -199,6 +196,9 @@ case class State[S, +A](run: S => (A, S)) {
 
 object State {
   type Rand[A] = State[RNG, A]
+
+  // Exercise 6.10
+  def unit[S, A](a: A): State[S, A] = State(s => (a, s))
 
   // Exercise 6.10
   def sequence[S, A](list: List[State[S, A]]): State[S, List[A]] = {
