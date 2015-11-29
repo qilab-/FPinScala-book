@@ -74,4 +74,50 @@ object Par {
   def delay[A](fa: => Par[A]): Par[A] =
     es => fa(es)
 
+  def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    es =>
+      if (run(es)(cond).get) t(es)
+      else f(es)
+
+  // Exercise 7.11
+  def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
+    es => {
+      val index = run(es)(n).get
+      choices(index)(es)
+    }
+
+  // Exercise 7.11
+  def choice2[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    es => {
+      val index = if (run(es)(cond).get) 0 else 1
+      choiceN(unit(index))(List(t, f))(es)
+    }
+
+  // Exercise7.12
+  def choiceMap[K, V](key: Par[K])(choices: Map[K, Par[V]]): Par[V] =
+    es => {
+      val k = run(es)(key).get
+      choices(k)(es)
+    }
+
+  // Exercise 7.13
+  def chooser[A, B](pa: Par[A])(choices: A => Par[B]): Par[B] =
+    es => choices(run(es)(pa).get)(es)
+
+  // Exercise 7.13
+  def choice3[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    chooser(cond)(b => if (b) t else f)
+
+  // Exercise 7.13
+  def choiceN2[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
+    chooser(n)(choices(_))
+
+  // Exercise 7.14
+  def join[A](a: Par[Par[A]]): Par[A] =
+    es => run(es)(a).get(es)
+
+  // Exercise 7.14
+  def flatMap[A, B](a: Par[A])(f: A => Par[B]): Par[B] =
+    join(map(a)(f))
+
 }
