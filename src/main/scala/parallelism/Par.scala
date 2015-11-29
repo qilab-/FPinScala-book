@@ -57,12 +57,14 @@ object Par {
 
   // Exercise 7.6
   def parFilter[A](as: List[A])(f: A => Boolean): Par[List[A]] = {
-    es => {
-      val fas: List[Par[A]] = as.map(lazyUnit(_))
-      val filtered = fas.filter { parA =>
-        f(parA(es).get)
+    val fas: List[Par[A]] = as.map(lazyUnit(_))
+    fas.foldRight(lazyUnit(List.empty[A])) { (parA, parList) =>
+      fork {
+        map2(parA, parList) { (a, l) =>
+          val r = if (f(a)) List(a) else List.empty[A]
+          r ++ l
+        }
       }
-      sequence(filtered)(es)
     }
   }
 
