@@ -30,4 +30,23 @@ object Gen {
     val state = State[RNG, Int](run)
     Gen(state)
   }
+
+  // Exercise 8.5
+  def unit[A](a: => A): Gen[A] =
+    Gen(State.unit(a))
+
+  // Exercise 8.5
+  def boolean: Gen[Boolean] = Gen(
+    choose(0, 2).sample.map(_ == 0)
+  )
+  def boolean_2: Gen[Boolean] = Gen(
+    State[RNG, Boolean](
+      RNG.map(RNG.nonNegativeLessThan(2))(_ == 0)
+    )
+  )
+
+  // Exercise 8.5
+  def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] = Gen(
+    State.sequence(List.fill(n)(g.sample))
+  )
 }
