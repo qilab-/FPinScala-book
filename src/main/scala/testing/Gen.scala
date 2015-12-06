@@ -1,16 +1,76 @@
 package testing
 
+import laziness.Stream
 import state.{RNG, State}
+import testing.Prop.Result
+import testing.Prop.Types._
 
-trait Prop {
+// Exercise 8.3
+trait Prop2 {
   def check: Boolean
 
   // Exercise 8.3
-  def &&(p: Prop): Prop = new Prop {
+  def &&(p: Prop2): Prop2 = new Prop2 {
     override def check: Boolean = {
       if (this.check) p.check else false
     }
   }
+}
+
+case class Prop(run: (TestCases, RNG) => Result) {
+  // Exercise 8.9
+  def &&(p: Prop): Prop = Prop { (testCases, rng) =>
+    val result = this.run(testCases, rng)
+    if (result.isFalsified)
+      result
+    else
+      p.run(testCases, rng)
+  }
+
+  // Exercise 8.9
+  def ||(p: Prop): Prop = Prop { (testCases, rng) =>
+    val result = this.run(testCases, rng)
+    if (result.isFalsified)
+      p.run(testCases, rng)
+    else
+      result
+  }
+}
+
+object Prop {
+  object Types {
+    type SuccessCount = Int
+    type TestCases = Int
+    type FailedCase = String
+  }
+
+  sealed trait Result {
+    def isFalsified: Boolean
+  }
+  case object Passed extends Result {
+    override def isFalsified = false
+  }
+  case class Falsified(failure: FailedCase, successes: SuccessCount) extends Result {
+    override def isFalsified = true
+  }
+
+  def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
+    (n, rng) => randomStream(as)(rng).zipWith(Stream.from(0))((_, _)).take(n).map {
+      case (a, i) => try {
+        if (f(a)) Passed else Falsified(a.toString, i)
+      } catch {
+        case e: Exception => Falsified(buildMsg(a, e), i)
+      }
+    }.find(_.isFalsified).getOrElse(Passed)
+  }
+
+  def randomStream[A](g: Gen[A])(rng: RNG): Stream[A] =
+    Stream.unfold(rng)(r => Some(g.sample.run(r)))
+
+  def buildMsg[A](s: A, e: Exception): String =
+    s"test case: $s\n" +
+    s"generated an exception: ${e.getMessage}\n" +
+    s"stack trace:\n ${e.getStackTrace.mkString("\n")}"
 }
 
 case class Gen[A](sample: State[RNG, A]) {
