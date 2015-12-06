@@ -73,7 +73,7 @@ object Prop {
     s"stack trace:\n ${e.getStackTrace.mkString("\n")}"
 }
 
-case class Gen[A](sample: State[RNG, A]) {
+case class Gen[+A](sample: State[RNG, A]) {
   // Exercise 8.6
   def flatMap[B](f: A => Gen[B]): Gen[B] = Gen(
     sample.flatMap { a =>
@@ -85,6 +85,9 @@ case class Gen[A](sample: State[RNG, A]) {
   def listOfN(size: Gen[Int]): Gen[List[A]] = {
     size.flatMap(n => Gen.listOfN(n, this))
   }
+
+  // Exercise 8.10
+  def unsized: SGen[A] = SGen(_ => this)
 }
 
 object Gen {
@@ -132,4 +135,7 @@ object Gen {
     val p = g1._2 / (g1._2 + g2._2)
     Gen(State(RNG.double)).flatMap { d => if (d < p) g1._1 else g2._1 }
   }
+}
+
+case class SGen[+A](forSize: Int => Gen[A]) {
 }
