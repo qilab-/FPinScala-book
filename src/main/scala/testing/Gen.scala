@@ -138,4 +138,8 @@ object Gen {
 }
 
 case class SGen[+A](forSize: Int => Gen[A]) {
+  // Exercise 8.11
+  def flatMap[B](f: A => SGen[B]): SGen[B] = SGen { size =>
+    this.forSize(size).flatMap(f(_).forSize(size))
+  }
 }
